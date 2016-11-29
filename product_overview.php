@@ -330,7 +330,7 @@ $(document).ready(function(e) {
 								var response_gettemplatecontent_obj = $.parseJSON(response_gettemplatecontent);
 								$('#content_list_'+value.product_short_name).append('<div id="product_'+value.id+'_section_'+value_pc.id+'">'+response_gettemplatecontent_obj.content+'</div>');
 							} else {
-								
+								console.log(value.id+'not valid');
 							}
 							
 							
@@ -348,7 +348,7 @@ $(document).ready(function(e) {
 							
 							
 						} else {
-						
+							console.log(value.id);
 							$('#content_list_'+value.product_short_name).append('<div id="product_'+value.id+'_section_'+value_pc.id+'">'+value_pc.content+'</div>');
 						}
 					});
@@ -356,7 +356,7 @@ $(document).ready(function(e) {
 			}
 		}
 	});
-	$("ul.tab li:nth-child(3)").find('a').click() 
+	$("ul.tab li:nth-child(1)").find('a').click() 
 	
 });
 

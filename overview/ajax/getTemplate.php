@@ -18,7 +18,7 @@ $mysqls = '';
 function hasTemplateIdents($content,$req='count') {
 	
 $regex_idents = array(
-	'(?![:])[a-z_]*?',
+	'(?![:])[a-z0-9_]*?',
 	'[a-z0-9_]*?:[a-z0-9_]*?',
 	'[a-z0-9_]*?:[a-z0-9_]*?:\\d+'
 );
@@ -66,7 +66,10 @@ function getIdentContent($mysqlData_arr,$product_id) {
 	//if($mysqlData_arr["identifier"] == "wp_dd_products:dimensions:1") {
 		//var_dump("1");
 	//}
-	if( preg_match("/^([a-z0-9_]*?):([a-z0-9_]*?)$/im",$mysqlData_arr["identifier"],$matches) ) {
+	if( preg_match("/^(wpt_globals):([a-z0-9_]*?)$/im",$mysqlData_arr["identifier"],$matches) ) {
+		$type='mysql:2g';
+		
+	} else if( preg_match("/^([a-z0-9_]*?):([a-z0-9_]*?)$/im",$mysqlData_arr["identifier"],$matches) ) {
 		$type='mysql';
 		
 	} else if( preg_match("/([a-z0-9_]*?):([a-z0-9_]*?):(\\d+)/im",$mysqlData_arr["identifier"],$matches) ) {
@@ -82,11 +85,11 @@ function getIdentContent($mysqlData_arr,$product_id) {
 			case 'normal':
 			
 			$rslti = mysqli_query($mysqlData_arr["link"], $mysqlData_arr["type"]." ".$mysqlData_arr["row"]." FROM ".$mysqlData_arr["table"]." ".$mysqlData_arr["condition"]);
-			if($rslti->num_rows == 1) {
+			if(isset($rslti->num_rows) && $rslti->num_rows == 1) {
 				$dsi = mysqli_fetch_assoc($rslti);
 				return utf8_encode($dsi[$mysqlData_arr["row"]]);
 			} else {
-				return "0:".$mysqlData_arr["identifier"];
+				return "0:".$mysqlData_arr["identifier"].":".$type;
 			}
 			
 			break;
@@ -104,13 +107,53 @@ function getIdentContent($mysqlData_arr,$product_id) {
 			$mysqlData_arr = $sql_prepare;
 			
 			$rslti = mysqli_query($mysqlData_arr["link"], $mysqlData_arr["type"]." ".$mysqlData_arr["row"]." FROM ".$mysqlData_arr["table"]." ".$mysqlData_arr["condition"]);
-			if($rslti->num_rows == 1) {
+			if(isset($rslti->num_rows) && $rslti->num_rows == 1) {
 				$dsi = mysqli_fetch_assoc($rslti);
 				return utf8_encode($dsi[$mysqlData_arr["row"]]);
 			} else {
-				return 0;
+				return "0:".implode(";",$matches).":".$type;
 			}			
 			break;
+			
+			###################################
+			
+		case 'mysql:2g':
+			
+			$sql_prepare = array( 
+				'type' => 'SELECT',
+				'row' => $mysqlData_arr["row"],
+				'table' => 'wpt_globals',
+				'identifier' => $mysqlData_arr["identifier"],
+				'condition' => "WHERE identifier = '".$matches[2]."'",
+				'link' => $mysqlData_arr["link"]
+			);
+			$mysqlData_arr = $sql_prepare;
+			
+			$rslti = mysqli_query($mysqlData_arr["link"], $mysqlData_arr["type"]." ".$mysqlData_arr["row"]." FROM ".$mysqlData_arr["table"]." ".$mysqlData_arr["condition"]);
+			if(isset($rslti->num_rows) && $rslti->num_rows == 1) {
+				$dsi = mysqli_fetch_assoc($rslti);
+				return utf8_encode($dsi[$mysqlData_arr["row"]]);
+			} else {
+				return "0:".$mysqlData_arr["identifier"].":".$type;
+			}		
+			
+			// return $mysqlData_arr["type"]." ".$mysqlData_arr["row"]." FROM ".$mysqlData_arr["table"]." ".$mysqlData_arr["condition"];
+			
+			
+			
+			// return "!!! 0:TABLE=>".$sql_prepare["table"].":ROW=>".$sql_prepare["row"].":IDENT=>".$matches[2];	
+		break;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			####################################
 			
 			case 'mysql:3':
 			
@@ -124,14 +167,14 @@ function getIdentContent($mysqlData_arr,$product_id) {
 			);
 			$mysqlData_arr = $sql_prepare;
 			$rslti = mysqli_query($mysqlData_arr["link"], $mysqlData_arr["type"]." ".$mysqlData_arr["row"]." FROM ".$mysqlData_arr["table"]." ".$mysqlData_arr["condition"]);
-			if($rslti->num_rows == 1) {
+			if(isset($rslti->num_rows) && $rslti->num_rows == 1) {
 				$dsi = mysqli_fetch_assoc($rslti);
 					$rowData = $dsi[$mysqlData_arr["row"]];
 					$exploded = explode(";",$rowData);
 				
 				return utf8_encode($exploded[$matches[3]]);
 			} else {
-				return 0;
+				return "0:".$mysqlData_arr["identifier"].":".$type;
 			}			
 			break;
 	}
